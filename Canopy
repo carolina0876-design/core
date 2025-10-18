@@ -1,0 +1,568 @@
+import React, { useState } from 'react';
+import { Star, Users, BookOpen, MessageCircle, X, Send, ChevronLeft, ChevronRight, Upload, Book, Library, Bookmark, Palette } from 'lucide-react';
+
+const CanopyApp = () => {
+  const [view, setView] = useState('library');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastReadPage, setLastReadPage] = useState(1);
+  const [selectedAnnotation, setSelectedAnnotation] = useState(null);
+  const [newComment, setNewComment] = useState('');
+  const [showUpload, setShowUpload] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [currentUserColor, setCurrentUserColor] = useState('#fbbf24');
+  const [activeUsers] = useState([
+    { id: 1, name: 'Alex', color: '#fbbf24', page: 1, avatar: 'A' },
+    { id: 2, name: 'Sam', color: '#60a5fa', page: 2, avatar: 'S' },
+    { id: 3, name: 'Jordan', color: '#a78bfa', page: 1, avatar: 'J' }
+  ]);
+
+  const highlightColors = [
+    { name: 'Yellow', color: '#fbbf24' },
+    { name: 'Blue', color: '#60a5fa' },
+    { name: 'Purple', color: '#a78bfa' },
+    { name: 'Green', color: '#4ade80' },
+    { name: 'Pink', color: '#f472b6' },
+    { name: 'Orange', color: '#fb923c' },
+    { name: 'Red', color: '#f87171' },
+    { name: 'Teal', color: '#2dd4bf' },
+    { name: 'Lime', color: '#a3e635' },
+    { name: 'Cyan', color: '#22d3ee' },
+    { name: 'Rose', color: '#fb7185' },
+    { name: 'Amber', color: '#fbbf24' }
+  ];
+
+  const books = [
+    { id: 1, title: 'The Keeper of Stories', author: 'Elena Whitmore', readers: 3, color: 'from-purple-500 to-pink-500', lastPage: 1 },
+    { id: 2, title: 'Pride and Prejudice', author: 'Jane Austen', readers: 12, color: 'from-blue-500 to-cyan-500', lastPage: null },
+    { id: 3, title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', readers: 8, color: 'from-amber-500 to-orange-500', lastPage: null }
+  ];
+
+  const bookContent = {
+    1: {
+      text: `The old library stood at the edge of town, its Gothic spires reaching toward the clouds like ancient sentinels. Within its stone walls lay countless stories, each waiting to be discovered by curious minds. The afternoon light filtered through stained glass windows, casting colorful patterns across the weathered wooden floors.
+
+Maria pushed open the heavy oak door, breathing in the familiar scent of old paper and leather bindings. She had come here every day for the past month, drawn by something she couldn't quite name. Perhaps it was the promise of adventure hidden in dusty volumes, or the quiet companionship of fellow readers scattered throughout the reading rooms.
+
+Today felt different somehow. The air seemed charged with possibility, as if the books themselves were whispering secrets meant only for her ears.`,
+      annotations: [
+        {
+          id: 1,
+          phrase: 'its Gothic spires reaching toward the clouds',
+          position: '15%',
+          users: [
+            {
+              userId: 1,
+              userName: 'Alex',
+              text: 'Beautiful imagery! Reminds me of Notre-Dame.',
+              timestamp: '2 hours ago',
+              comments: [
+                { userId: 2, userName: 'Sam', text: 'Yes! The architecture metaphor is perfect.', timestamp: '1 hour ago' }
+              ]
+            }
+          ]
+        },
+        {
+          id: 2,
+          phrase: 'breathing in the familiar scent of old paper and leather bindings',
+          position: '45%',
+          users: [
+            {
+              userId: 2,
+              userName: 'Sam',
+              text: 'This is exactly what libraries smell like. So nostalgic.',
+              timestamp: '3 hours ago',
+              comments: []
+            },
+            {
+              userId: 3,
+              userName: 'Jordan',
+              text: 'The sensory detail here is amazing. You can almost smell it.',
+              timestamp: '2 hours ago',
+              comments: []
+            }
+          ]
+        },
+        {
+          id: 3,
+          phrase: 'as if the books themselves were whispering secrets',
+          position: '75%',
+          users: [
+            {
+              userId: 1,
+              userName: 'Alex',
+              text: 'Love this personification!',
+              timestamp: '1 hour ago',
+              comments: []
+            }
+          ]
+        }
+      ]
+    },
+    2: {
+      text: `She wandered through the maze of shelves, her fingers trailing along leather spines. Each book was a doorway, she thought, leading to worlds both familiar and strange. Some were worn smooth by countless hands before hers, their pages soft as fabric. Others sat pristine and untouched, waiting for their first reader.
+
+In the philosophy section, she found what she was looking for—or rather, it found her. A slim volume bound in deep green cloth, its title embossed in fading gold: "The Art of Seeing." She had never heard of it before, yet pulling it from the shelf felt like greeting an old friend.
+
+The first page contained a single quote: "We do not see things as they are; we see them as we are."`,
+      annotations: [
+        {
+          id: 4,
+          phrase: 'Each book was a doorway',
+          position: '25%',
+          users: [
+            {
+              userId: 2,
+              userName: 'Sam',
+              text: 'Perfect metaphor for reading.',
+              timestamp: '2 hours ago',
+              comments: []
+            }
+          ]
+        }
+      ]
+    }
+  };
+
+  const currentContent = bookContent[currentPage];
+
+  const handleAddComment = (annotationId) => {
+    if (newComment.trim()) {
+      setNewComment('');
+    }
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type === 'application/pdf') {
+      alert('PDF uploaded successfully! Opening in collaborative mode...');
+      setShowUpload(false);
+      setView('reading');
+    }
+  };
+
+  const handleBackToLibrary = () => {
+    setLastReadPage(currentPage);
+    setView('library');
+    setSelectedAnnotation(null);
+  };
+
+  const handleOpenBook = (bookId) => {
+    setView('reading');
+    setCurrentPage(lastReadPage);
+  };
+
+  if (view === 'library') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900">
+        <header className="border-b border-slate-700/50 backdrop-blur-lg bg-slate-900/50">
+          <div className="max-w-6xl mx-auto px-6 py-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="text-emerald-400">
+                  <BookOpen className="w-10 h-10" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+                    Canopy
+                  </h1>
+                  <p className="text-sm text-slate-400">Read together, grow together</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowUpload(true)}
+                className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 rounded-lg transition-colors font-medium"
+              >
+                <Upload className="w-4 h-4" />
+                Upload PDF
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <div className="max-w-6xl mx-auto px-6 py-12">
+          <div className="flex items-center gap-3 mb-8">
+            <Library className="w-6 h-6 text-emerald-400" />
+            <h2 className="text-2xl font-bold text-slate-100">Your Library</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {books.map(book => (
+              <button
+                key={book.id}
+                onClick={() => handleOpenBook(book.id)}
+                className="group relative bg-slate-800/40 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6 hover:border-emerald-500/50 transition-all hover:scale-105"
+              >
+                {book.lastPage && (
+                  <div className="absolute top-3 right-3 flex items-center gap-1 bg-emerald-500 text-white text-xs px-2 py-1 rounded-full">
+                    <Bookmark className="w-3 h-3" />
+                    Page {book.lastPage}
+                  </div>
+                )}
+                <div className={`w-full h-48 bg-gradient-to-br ${book.color} rounded-lg mb-4 flex items-center justify-center`}>
+                  <BookOpen className="w-16 h-16 text-white opacity-80" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-100 mb-1">{book.title}</h3>
+                <p className="text-sm text-slate-400 mb-3">{book.author}</p>
+                <div className="flex items-center gap-2 text-xs text-emerald-400">
+                  <Users className="w-4 h-4" />
+                  <span>{book.readers} readers</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {showUpload && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl p-8 max-w-md w-full mx-4">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-slate-100">Upload Book</h3>
+                <button onClick={() => setShowUpload(false)} className="text-slate-400 hover:text-slate-200">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="border-2 border-dashed border-slate-600 rounded-xl p-8 text-center hover:border-emerald-500 transition-colors">
+                <Upload className="w-12 h-12 mx-auto mb-4 text-slate-400" />
+                <p className="text-slate-300 mb-2">Choose a PDF file</p>
+                <p className="text-sm text-slate-500 mb-4">Maximum file size: 50MB</p>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="file-upload"
+                />
+                <label
+                  htmlFor="file-upload"
+                  className="inline-block px-6 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg cursor-pointer transition-colors"
+                >
+                  Select File
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 text-slate-100">
+      <header className="border-b border-slate-700/50 backdrop-blur-lg bg-slate-900/80 sticky top-0 z-20">
+        <div className="max-w-7xl mx-auto px-6 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleBackToLibrary}
+                className="text-slate-400 hover:text-emerald-400 transition-colors"
+              >
+                <Library className="w-5 h-5" />
+              </button>
+              <div className="h-6 w-px bg-slate-700" />
+              <div>
+                <h2 className="text-lg font-semibold text-slate-100">The Keeper of Stories</h2>
+                <p className="text-xs text-slate-400">Elena Whitmore</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setShowColorPicker(!showColorPicker)}
+                className="relative flex items-center gap-2 px-3 py-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-colors group"
+              >
+                <Palette className="w-4 h-4 text-slate-300" />
+                <div 
+                  className="w-6 h-6 rounded-full border-2 border-slate-600"
+                  style={{ backgroundColor: currentUserColor }}
+                />
+                <span className="text-sm text-slate-300 hidden sm:inline">My Color</span>
+              </button>
+
+              <div className="h-6 w-px bg-slate-700" />
+
+              <div className="text-sm text-slate-400">Reading on this page:</div>
+              <div className="flex gap-3">
+                {activeUsers.filter(u => u.page === currentPage).map(user => (
+                  <div key={user.id} className="flex items-center gap-2 bg-slate-700/50 px-3 py-1.5 rounded-lg">
+                    <div
+                      className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold"
+                      style={{ backgroundColor: user.color }}
+                    >
+                      {user.avatar}
+                    </div>
+                    <span className="text-sm text-slate-200">{user.name}</span>
+                  </div>
+                ))}
+                {activeUsers.filter(u => u.page !== currentPage).length > 0 && (
+                  <div className="relative group">
+                    <div className="flex items-center gap-1 bg-slate-700/30 px-3 py-1.5 rounded-lg text-sm text-slate-400 cursor-pointer">
+                      <Users className="w-4 h-4" />
+                      <span>{activeUsers.filter(u => u.page !== currentPage).length} on other pages</span>
+                    </div>
+                    <div className="absolute top-full right-0 mt-2 bg-slate-800 border border-slate-700 rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                      {activeUsers.filter(u => u.page !== currentPage).map(user => (
+                        <div key={user.id} className="flex items-center gap-2 py-1">
+                          <div
+                            className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold"
+                            style={{ backgroundColor: user.color }}
+                          >
+                            {user.avatar}
+                          </div>
+                          <span className="text-sm text-slate-300">{user.name} - Page {user.page}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="bg-slate-800/40 backdrop-blur-sm rounded-xl border border-slate-700/50 shadow-xl">
+          <div className="relative flex">
+            {/* Left annotation margin */}
+            <div className="w-16 py-12 pl-4 relative flex-shrink-0">
+              <div className="relative h-full">
+                {currentContent.annotations.filter((_, idx) => idx % 2 === 0).map((annotation) => (
+                  <button
+                    key={annotation.id}
+                    onClick={() => setSelectedAnnotation(selectedAnnotation?.id === annotation.id ? null : annotation)}
+                    className="absolute group"
+                    style={{ top: annotation.position }}
+                  >
+                    <Star
+                      className={`w-7 h-7 transition-all cursor-pointer ${
+                        selectedAnnotation?.id === annotation.id
+                          ? 'fill-amber-400 text-amber-400 scale-125 drop-shadow-lg'
+                          : 'fill-amber-400/80 text-amber-400 hover:fill-amber-400 hover:scale-110'
+                      }`}
+                    />
+                    {annotation.users.length > 1 && (
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full text-xs flex items-center justify-center text-white font-bold border-2 border-slate-800">
+                        {annotation.users.length}
+                      </div>
+                    )}
+                    <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-3 py-1 bg-slate-800 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-slate-700 z-10">
+                      {annotation.users.length} {annotation.users.length === 1 ? 'annotation' : 'annotations'}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Text content */}
+            <div className="flex-1 px-12 py-12">
+              <div className="max-w-3xl mx-auto">
+                <p className="font-serif text-lg leading-relaxed text-slate-200">
+                  {currentContent.text.split('\n\n').map((para, idx) => (
+                    <span key={idx} className="block mb-6 last:mb-0">
+                      {para}
+                    </span>
+                  ))}
+                </p>
+              </div>
+            </div>
+
+            {/* Right annotation margin */}
+            <div className="w-16 py-12 pr-4 relative flex-shrink-0">
+              <div className="relative h-full">
+                {currentContent.annotations.filter((_, idx) => idx % 2 === 1).map((annotation) => (
+                  <button
+                    key={annotation.id}
+                    onClick={() => setSelectedAnnotation(selectedAnnotation?.id === annotation.id ? null : annotation)}
+                    className="absolute group"
+                    style={{ top: annotation.position }}
+                  >
+                    <Star
+                      className={`w-7 h-7 transition-all cursor-pointer ${
+                        selectedAnnotation?.id === annotation.id
+                          ? 'fill-amber-400 text-amber-400 scale-125 drop-shadow-lg'
+                          : 'fill-amber-400/80 text-amber-400 hover:fill-amber-400 hover:scale-110'
+                      }`}
+                    />
+                    {annotation.users.length > 1 && (
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full text-xs flex items-center justify-center text-white font-bold border-2 border-slate-800">
+                        {annotation.users.length}
+                      </div>
+                    )}
+                    <div className="absolute right-full mr-2 top-1/2 -translate-y-1/2 px-3 py-1 bg-slate-800 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-slate-700 z-10">
+                      {annotation.users.length} {annotation.users.length === 1 ? 'annotation' : 'annotations'}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="px-8 py-4 border-t border-slate-700/50 flex items-center justify-between bg-slate-800/20">
+            <button
+              onClick={() => {
+                setCurrentPage(Math.max(1, currentPage - 1));
+                setSelectedAnnotation(null);
+              }}
+              disabled={currentPage === 1}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-700/50 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg transition-colors text-sm"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Previous
+            </button>
+            
+            <span className="text-sm text-slate-400 font-medium">Page {currentPage} of 2</span>
+            
+            <button
+              onClick={() => {
+                setCurrentPage(Math.min(2, currentPage + 1));
+                setSelectedAnnotation(null);
+              }}
+              disabled={currentPage === 2}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-700/50 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg transition-colors text-sm"
+            >
+              Next
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {selectedAnnotation && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col">
+            <div className="px-6 py-4 border-b border-slate-700/50 flex items-start justify-between">
+              <div className="flex-1 pr-4">
+                <p className="text-xs text-slate-500 uppercase tracking-wide mb-2">Annotated Text</p>
+                <p className="font-serif text-lg text-slate-100 italic">
+                  "{selectedAnnotation.phrase}"
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedAnnotation(null)}
+                className="text-slate-400 hover:text-slate-200 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+              {selectedAnnotation.users.map((annotation, idx) => (
+                <div key={idx} className="space-y-3">
+                  <div className="bg-slate-700/30 rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold"
+                        style={{ backgroundColor: activeUsers.find(u => u.id === annotation.userId)?.color }}
+                      >
+                        {annotation.userName[0]}
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-200">{annotation.userName}</p>
+                        <p className="text-xs text-slate-400">{annotation.timestamp}</p>
+                      </div>
+                    </div>
+                    <p className="text-slate-300 leading-relaxed">{annotation.text}</p>
+                  </div>
+
+                  {annotation.comments.length > 0 && (
+                    <div className="ml-8 space-y-2">
+                      {annotation.comments.map((comment, cIdx) => (
+                        <div key={cIdx} className="bg-slate-700/20 rounded-lg p-3 flex gap-3">
+                          <MessageCircle className="w-4 h-4 text-emerald-400 mt-1 flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-slate-300">{comment.userName}</p>
+                            <p className="text-sm text-slate-400 mt-1">{comment.text}</p>
+                            <p className="text-xs text-slate-500 mt-1">{comment.timestamp}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="px-6 py-4 border-t border-slate-700/50">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Add your thoughts..."
+                  className="flex-1 bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  onKeyPress={(e) => e.key === 'Enter' && handleAddComment(selectedAnnotation.id)}
+                />
+                <button
+                  onClick={() => handleAddComment(selectedAnnotation.id)}
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Color Picker Modal */}
+      {showColorPicker && view === 'reading' && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowColorPicker(false)}>
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-xl font-bold text-slate-100">Choose Your Highlight Color</h3>
+                <p className="text-sm text-slate-400 mt-1">This color will be used for all your highlights</p>
+              </div>
+              <button
+                onClick={() => setShowColorPicker(false)}
+                className="text-slate-400 hover:text-slate-200 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-4 gap-3">
+              {highlightColors.map((colorOption) => (
+                <button
+                  key={colorOption.color}
+                  onClick={() => {
+                    setCurrentUserColor(colorOption.color);
+                    setShowColorPicker(false);
+                  }}
+                  className={`relative group flex flex-col items-center gap-2 p-3 rounded-lg transition-all ${
+                    currentUserColor === colorOption.color
+                      ? 'bg-slate-700 ring-2 ring-emerald-500'
+                      : 'bg-slate-700/30 hover:bg-slate-700/50'
+                  }`}
+                >
+                  <div
+                    className="w-12 h-12 rounded-full border-2 border-slate-600 transition-transform group-hover:scale-110"
+                    style={{ backgroundColor: colorOption.color }}
+                  />
+                  <span className="text-xs text-slate-300">{colorOption.name}</span>
+                  {currentUserColor === colorOption.color && (
+                    <div className="absolute top-1 right-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-6 p-4 bg-slate-700/30 rounded-lg">
+              <p className="text-sm text-slate-300 mb-2">Preview:</p>
+              <p className="font-serif text-base leading-relaxed text-slate-200">
+                This is how your <span style={{ backgroundColor: `${currentUserColor}40` }} className="px-1">highlighted text</span> will appear to you and other readers.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default CanopyApp;
